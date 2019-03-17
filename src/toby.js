@@ -60,7 +60,7 @@ export default class Toby {
 
 		container.appendChild( this._sentinel );
 
-		observeScrollableViewport( container, () => this.render() );
+		this.callback = observeScrollableViewport( container, () => this.render() );
 	}
 
 	/**
@@ -68,6 +68,9 @@ export default class Toby {
 	 */
 	destroy() {
 		this.container.innerHTML = '';
+
+		this.container.removeEventListener( 'scroll', this.callback );
+		window.removeEventListener( 'resize', this.callback );
 	}
 
 	/**
@@ -123,6 +126,7 @@ export default class Toby {
 				// If the current row should not be rendered but is currently rendered, remove it from the DOM.
 				if ( this._renderedRowElements[ row ] ) {
 					this._renderedRowElements[ row ].remove();
+					this._renderedRowElements[ row ] = null;
 				}
 			}
 		}
@@ -195,13 +199,13 @@ export default class Toby {
 		} );
 
 		// Select the clicked cell and unselect it when clicking somewhere else.
-		document.body.addEventListener( 'click', evt => {
-			if ( evt.target === cellElement ) {
-				cellElement.classList.add( 'selected' );
-			} else {
-				cellElement.classList.remove( 'selected' );
-			}
-		} );
+		// document.body.addEventListener( 'click', evt => {
+		// 	if ( evt.target === cellElement ) {
+		// 		cellElement.classList.add( 'selected' );
+		// 	} else {
+		// 		cellElement.classList.remove( 'selected' );
+		// 	}
+		// } );
 
 		return cellElement;
 	}
@@ -257,9 +261,11 @@ function observeScrollableViewport( container, callback ) {
 	container.addEventListener( 'scroll', onChange );
 	window.addEventListener( 'resize', onChange );
 
+	return onChange;
+
 	function onChange() {
 		// Cache, cause cache makes everything fast!
-		this.cache = callback;
+		// this.cache = callback;
 
 		callback( getViewport( container ) );
 	}
